@@ -1,0 +1,1 @@
+gen::[a|Int] ->(a|Int ->Bool) ->{${name}::String;...}

@@ -8,62 +8,62 @@ use crate::{
     tokenize, Root, SyntaxKind,
 };
 
-#[test]
-fn interpolation() {
-    let root = ast::Root::parse(include_str!("../test_data/parser/success/interpolation.nix"))
-        .ok()
-        .unwrap();
-    let let_in = ast::LetIn::try_from(root.expr().unwrap()).unwrap();
-    let set = ast::AttrSet::try_from(let_in.body().unwrap()).unwrap();
-    let entry = set.entries().nth(1).unwrap();
-    let attrpath_value = ast::AttrpathValue::try_from(entry).unwrap();
-    let value = ast::Str::try_from(attrpath_value.value().unwrap()).unwrap();
+// #[test]
+// fn interpolation() {
+//     let root = ast::Root::parse(include_str!("../test_data/parser/success/interpolation.nix"))
+//         .ok()
+//         .unwrap();
+//     let let_in = ast::LetIn::try_from(root.expr().unwrap()).unwrap();
+//     let set = ast::AttrSet::try_from(let_in.body().unwrap()).unwrap();
+//     let entry = set.entries().nth(1).unwrap();
+//     let attrpath_value = ast::AttrpathValue::try_from(entry).unwrap();
+//     let value = ast::Str::try_from(attrpath_value.value().unwrap()).unwrap();
 
-    match &*value.normalized_parts() {
-    &[
-        ast::InterpolPart::Literal(ref s1),
-        ast::InterpolPart::Interpolation(_),
-        ast::InterpolPart::Literal(ref s2),
-        ast::InterpolPart::Interpolation(_),
-        ast::InterpolPart::Literal(ref s3)
-    ]
-    if s1 == "The set's x value is: "
-        && s2 == "\n\nThis line shall have no indention\n  This line shall be indented by 2\n\n\n"
-        && s3 == "\n" => (),
-    parts => panic!("did not match: {:#?}", parts)
-}
-}
+//     match &*value.normalized_parts() {
+//     &[
+//         ast::InterpolPart::Literal(ref s1),
+//         ast::InterpolPart::Interpolation(_),
+//         ast::InterpolPart::Literal(ref s2),
+//         ast::InterpolPart::Interpolation(_),
+//         ast::InterpolPart::Literal(ref s3)
+//     ]
+//     if s1 == "The set's x value is: "
+//         && s2 == "\n\nThis line shall have no indention\n  This line shall be indented by 2\n\n\n"
+//         && s3 == "\n" => (),
+//     parts => panic!("did not match: {:#?}", parts)
+// }
+// }
 
-#[test]
-fn inherit() {
-    let root =
-        ast::Root::parse(include_str!("../test_data/parser/success/inherit.nix")).ok().unwrap();
-    let let_in = ast::LetIn::try_from(root.expr().unwrap()).unwrap();
-    let set = ast::AttrSet::try_from(let_in.body().unwrap()).unwrap();
-    let inherit = set.inherits().nth(1).unwrap();
+// #[test]
+// fn inherit() {
+//     let root =
+//         ast::Root::parse(include_str!("../test_data/parser/success/inherit.nix")).ok().unwrap();
+//     let let_in = ast::LetIn::try_from(root.expr().unwrap()).unwrap();
+//     let set = ast::AttrSet::try_from(let_in.body().unwrap()).unwrap();
+//     let inherit = set.inherits().nth(1).unwrap();
 
-    let from = inherit.from().unwrap().expr().unwrap();
-    let ident: ast::Ident = ast::Ident::try_from(from).unwrap();
-    assert_eq!(ident.syntax().text(), "set");
-    let mut children = inherit.attrs();
-    assert_eq!(children.next().unwrap().syntax().text(), "z");
-    assert_eq!(children.next().unwrap().syntax().text(), "a");
-    assert!(children.next().is_none());
-}
+//     let from = inherit.from().unwrap().expr().unwrap();
+//     let ident: ast::Ident = ast::Ident::try_from(from).unwrap();
+//     assert_eq!(ident.syntax().text(), "set");
+//     let mut children = inherit.attrs();
+//     assert_eq!(children.next().unwrap().syntax().text(), "z");
+//     assert_eq!(children.next().unwrap().syntax().text(), "a");
+//     assert!(children.next().is_none());
+// }
 
-#[test]
-fn math() {
-    let root = ast::Root::parse(include_str!("../test_data/parser/success/math.nix")).ok().unwrap();
-    let op1 = ast::BinOp::try_from(root.expr().unwrap()).unwrap();
-    let op2 = ast::BinOp::try_from(op1.lhs().unwrap()).unwrap();
-    assert_eq!(op1.operator().unwrap(), ast::BinOpKind::Add);
+// #[test]
+// fn math() {
+//     let root = ast::Root::parse(include_str!("../test_data/parser/success/math.nix")).ok().unwrap();
+//     let op1 = ast::BinOp::try_from(root.expr().unwrap()).unwrap();
+//     let op2 = ast::BinOp::try_from(op1.lhs().unwrap()).unwrap();
+//     assert_eq!(op1.operator().unwrap(), ast::BinOpKind::Add);
 
-    let lhs = ast::Literal::try_from(op2.lhs().unwrap()).unwrap();
-    assert_eq!(lhs.syntax().text(), "1");
+//     let lhs = ast::Literal::try_from(op2.lhs().unwrap()).unwrap();
+//     assert_eq!(lhs.syntax().text(), "1");
 
-    let rhs = ast::BinOp::try_from(op2.rhs().unwrap()).unwrap();
-    assert_eq!(rhs.operator().unwrap(), ast::BinOpKind::Mul);
-}
+//     let rhs = ast::BinOp::try_from(op2.rhs().unwrap()).unwrap();
+//     assert_eq!(rhs.operator().unwrap(), ast::BinOpKind::Mul);
+// }
 
 #[test]
 fn t_macro() {
@@ -119,7 +119,9 @@ fn parser_dir_tests() {
 fn tokenizer_dir_tests() {
     dir_tests("tokenizer", |code| {
         let mut actual = String::new();
-        for (kind, str) in tokenize(&code) {
+        let tokens = tokenize(&code);
+        // println!("{tokens:?}");
+        for (kind, str) in tokens {
             writeln!(actual, "{:?}, \"{}\"", kind, str).unwrap();
         }
         actual

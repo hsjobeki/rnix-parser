@@ -693,6 +693,80 @@ where
         // Always point this to the lowest-level math function there is
         self.parse_implication()
     }
+
+    fn parse_type(&mut self) -> Checkpoint {
+        let checkpoint = self.checkpoint();
+        match self.peek() {
+            // TODO
+            Some(T!['{']) => println!("parse AttrSet"),
+            Some(T!['[']) => println!("parse List"),
+            Some(T!['(']) => println!("parse Expr"),
+            // Some(T!['|']) => println!("parse Expr"),
+
+            // Primitives
+            Some(token) => {
+                self.start_node(NODE_TYPE);
+                self.bump();
+                self.finish_node();
+
+                match self.peek() {
+                    Some(T![|]) => {
+                        println!("Type Union");
+                        self.start_node_at(checkpoint, NODE_TYPE_UNION);
+                        self.bump();
+
+                        self.parse_type();
+
+                        self.finish_node();
+                    }
+                    None | Some(TOKEN_IDENT) => {
+                        println!("End of basic type declaration");
+
+                        // self.checkpoint();
+                    }
+                    tok @ _ => println!("Error {tok:?}"),
+                }
+            }
+            _ => println!("Error"),
+        }
+        checkpoint
+    }
+    fn parse_ident(&mut self) -> Checkpoint {
+        let out = match self.peek() {
+            Some(TOKEN_IDENT) => {
+                let checkpoint = self.checkpoint();
+                self.start_node(NODE_IDENT);
+                self.bump();
+                self.finish_node();
+
+                match self.peek() {
+                    Some(T![::]) => {
+                        self.start_node_at(checkpoint, NODE_DECLARE);
+                    }
+                    Some(T![=]) => {
+                        self.start_node_at(checkpoint, NODE_ASSIGN);
+                    }
+                    _ => {
+                        self.start_node_at(checkpoint, NODE_ERROR);
+                        self.errors.push(ParseError::UnexpectedEOF)
+                    }
+                };
+                self.bump();
+                self.parse_type();
+                self.finish_node();
+                if self.peek().is_some() {
+                    self.parse_ident()
+                } else {
+                    checkpoint
+                }
+            }
+            _ => {
+                println!("Parse Math");
+                self.parse_math()
+            }
+        };
+        out
+    }
     /// Parse Nix code into an AST
     pub fn parse_expr(&mut self) -> Checkpoint {
         // Limit chosen somewhat arbitrarily
@@ -708,58 +782,7 @@ where
             return self.checkpoint();
         }
         self.depth += 1;
-        let out = match self.peek() {
-            Some(T![let]) => {
-                let checkpoint = self.checkpoint();
-                self.bump();
-
-                if self.peek() == Some(T!['{']) {
-                    self.start_node_at(checkpoint, NODE_LEGACY_LET);
-                    self.bump();
-                    self.parse_set(T!['}']);
-                    self.finish_node();
-                } else {
-                    self.start_node_at(checkpoint, NODE_LET_IN);
-                    self.parse_set(T![in]);
-                    self.parse_expr();
-                    self.finish_node();
-                }
-                checkpoint
-            }
-            Some(T![with]) => {
-                let checkpoint = self.checkpoint();
-                self.start_node(NODE_WITH);
-                self.bump();
-                self.parse_expr();
-                self.expect(T![;]);
-                self.parse_expr();
-                self.finish_node();
-                checkpoint
-            }
-            Some(T![if]) => {
-                let checkpoint = self.checkpoint();
-                self.start_node(NODE_IF_ELSE);
-                self.bump();
-                self.parse_expr();
-                self.expect(T![then]);
-                self.parse_expr();
-                self.expect(TOKEN_ELSE);
-                self.parse_expr();
-                self.finish_node();
-                checkpoint
-            }
-            Some(T![assert]) => {
-                let checkpoint = self.checkpoint();
-                self.start_node(NODE_ASSERT);
-                self.bump();
-                self.parse_expr();
-                self.expect(T![;]);
-                self.parse_expr();
-                self.finish_node();
-                checkpoint
-            }
-            _ => self.parse_math(),
-        };
+        let out = self.parse_ident();
         self.depth -= 1;
         out
     }
@@ -774,7 +797,11 @@ where
     parser.builder.start_node(NixLanguage::kind_to_raw(NODE_ROOT));
     parser.parse_expr();
     parser.eat_trivia();
+    // if after parsing there are leftover characters something went wrong
     if parser.peek().is_some() {
+        println!(
+            "Unhandled extra characters. We must handle them in the parser!, or syntax is invalid?"
+        );
         let start = parser.start_error_node();
         while parser.peek().is_some() {
             parser.bump();
@@ -783,6 +810,7 @@ where
         parser.errors.push(ParseError::UnexpectedExtra(TextRange::new(start, end)));
         parser.eat_trivia();
     }
+
     parser.builder.finish_node();
     (parser.builder.finish(), parser.errors)
 }

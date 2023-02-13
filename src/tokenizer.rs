@@ -23,6 +23,7 @@ fn is_valid_uri_char(c: char) -> bool {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Context {
+    Type,
     StringBody { multiline: bool },
     StringEnd,
     Interpol { brackets: u32 },
@@ -284,9 +285,9 @@ impl Tokenizer<'_> {
                 (Some('/'), Some('*')) => None,
                 (Some('/'), Some(c)) if !c.is_whitespace() => Some(IdentType::Path),
                 (Some('>'), _) => Some(IdentType::Store),
-                (Some(':'), Some(c)) if is_valid_uri_char(c) && !skipped.contains('_') => {
-                    Some(IdentType::Uri)
-                }
+                // (Some(':'), Some(c)) if is_valid_uri_char(c) && !skipped.contains('_') => {
+                //     Some(IdentType::Uri)
+                // }
                 _ => None,
             }
         };
@@ -315,9 +316,11 @@ impl Tokenizer<'_> {
             '{' => {
                 if let Some(Context::Interpol { brackets }) = self.ctx.last_mut() {
                     *brackets += 1;
+                    return Some(TOKEN_ERROR);
                 }
-                TOKEN_L_BRACE
+                TOKEN_ATTRSET_TYPE_START
             }
+
             '}' => {
                 if let Some(Context::Interpol { brackets }) = self.ctx.last_mut() {
                     match brackets.checked_sub(1) {
@@ -328,19 +331,29 @@ impl Tokenizer<'_> {
                         }
                     }
                 }
-                TOKEN_R_BRACE
+                TOKEN_ATTRSET_TYPE_END
             }
-            '[' => TOKEN_L_BRACK,
-            ']' => TOKEN_R_BRACK,
-            '@' => TOKEN_AT,
-            ':' => TOKEN_COLON,
-            ',' => TOKEN_COMMA,
+            '[' => TOKEN_LIST_TYPE_START,
+            ']' => TOKEN_LIST_TYPE_END,
+            '@' => TOKEN_ERROR,
+            ':' => {
+                if self.peek() == Some(':') {
+                    self.next().unwrap();
+                    self.push_ctx(Context::Type);
+                    TOKEN_DOUBLE_COLON
+                } else {
+                    // TOKEN_COLON
+                    TOKEN_ERROR
+                }
+            }
+            ',' => TOKEN_ERROR,
             '.' => {
                 if self.peek().map_or(false, |x| ('0'..='9').contains(&x)) {
                     self.consume(|c| ('0'..='9').contains(&c));
                     self.consume_scientific()
                 } else {
-                    TOKEN_DOT
+                    // TOKEN_DOT
+                    TOKEN_ERROR
                 }
             }
             '=' => TOKEN_ASSIGN,
@@ -350,20 +363,22 @@ impl Tokenizer<'_> {
             ')' => TOKEN_R_PAREN,
             '+' if self.peek() == Some('+') => {
                 self.next().unwrap();
-                TOKEN_CONCAT
+                // TOKEN_CONCAT
+                TOKEN_ERROR
             }
             '-' if self.peek() == Some('>') => {
                 self.next().unwrap();
-                TOKEN_IMPLICATION
+                // TOKEN_IMPLICATION
+                TOKEN_LAMBDA_TYPE
             }
             '/' if self.peek() == Some('/') => {
                 self.next().unwrap();
                 TOKEN_UPDATE
             }
-            '+' => TOKEN_ADD,
-            '-' => TOKEN_SUB,
-            '*' => TOKEN_MUL,
-            '/' => TOKEN_DIV,
+            '+' => TOKEN_ERROR,
+            '-' => TOKEN_ERROR,
+            '*' => TOKEN_ERROR,
+            '/' => TOKEN_ERROR,
             '<' if kind == Some(IdentType::Store) => {
                 self.consume(is_valid_path_char);
                 if self.next() != Some('>') {
@@ -374,22 +389,30 @@ impl Tokenizer<'_> {
             }
             '&' if self.peek() == Some('&') => {
                 self.next().unwrap();
-                TOKEN_AND_AND
+                // TOKEN_AND_AND
+                TOKEN_ERROR
             }
-            '|' if self.peek() == Some('|') => {
-                self.next().unwrap();
-                TOKEN_OR_OR
+            '|' => {
+                if self.peek() == Some('|') {
+                    self.next().unwrap();
+                    // TOKEN_OR_OR
+                    TOKEN_ERROR
+                } else {
+                    TOKEN_PIPE
+                }
             }
+
             '<' if self.peek() == Some('=') => {
                 self.next().unwrap();
-                TOKEN_LESS_OR_EQ
+                TOKEN_ERROR
+                // TOKEN_LESS_OR_EQ
             }
-            '<' => TOKEN_LESS,
+            '<' => TOKEN_ERROR,
             '>' if self.peek() == Some('=') => {
                 self.next().unwrap();
-                TOKEN_MORE_OR_EQ
+                TOKEN_ERROR
             }
-            '>' => TOKEN_MORE,
+            '>' => TOKEN_ERROR,
             '$' if self.peek() == Some('{') => {
                 self.next().unwrap();
                 self.push_ctx(Context::Interpol { brackets: 0 });
@@ -408,17 +431,32 @@ impl Tokenizer<'_> {
                 });
                 match kind {
                     IdentType::Ident => match self.str_since(start) {
-                        "assert" => TOKEN_ASSERT,
-                        "else" => TOKEN_ELSE,
-                        "if" => TOKEN_IF,
-                        "in" => TOKEN_IN,
-                        "inherit" => TOKEN_INHERIT,
-                        "let" => TOKEN_LET,
-                        // "or" is a contextual keyword and will be handled in the parser.
-                        "or" => TOKEN_OR,
-                        "rec" => TOKEN_REC,
-                        "then" => TOKEN_THEN,
-                        "with" => TOKEN_WITH,
+                        // Error, reserved keyword are not allowed in type annotations
+                        "assert" => TOKEN_ERROR,
+                        "else" => TOKEN_ERROR,
+                        "if" => TOKEN_ERROR,
+                        "in" => TOKEN_ERROR,
+                        "inherit" => TOKEN_ERROR,
+                        "let" => TOKEN_ERROR,
+                        // "or" is a contextual keyword and will be handled in the parser ???
+                        // "or" => TOKEN_ERROR,
+                        "rec" => TOKEN_ERROR,
+                        "then" => TOKEN_ERROR,
+                        "with" => TOKEN_ERROR,
+                        // Reserved Type Keywords (basic)
+                        "Bool" => TOKEN_BOOL_TYPE,
+                        "Int" => TOKEN_INT_TYPE,
+                        "Float" => TOKEN_FLOAT_TYPE,
+                        "String" => TOKEN_STRING_TYPE,
+                        "Path" => TOKEN_PATH_TYPE,
+                        "Null" => TOKEN_NULL_TYPE,
+                        // More Reserved Type Keywords
+                        "Number" => TOKEN_NUMBER_TYPE,
+                        "Any" => TOKEN_ANY_TYPE,
+                        "Derivation" => TOKEN_DERIVATION_TYPE,
+                        "StorePath" => TOKEN_STOREPATH_TYPE,
+                        "Package" => TOKEN_PACKAGE_TYPE,
+
                         _ => TOKEN_IDENT,
                     },
                     IdentType::Uri => TOKEN_URI,

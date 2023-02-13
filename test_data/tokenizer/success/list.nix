@@ -1,1 +1,1 @@
-[a 2 3 "lol"]
+gen :: [ a | Int ] -> ( a | Int -> Bool ) -> { ${name} :: String; ... }

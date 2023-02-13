@@ -2,71 +2,105 @@
 #[repr(u16)]
 #[allow(non_camel_case_types)]
 pub enum SyntaxKind {
+    // Type Keywords
+    // Basic types
+    TOKEN_BOOL_TYPE,
+    TOKEN_INT_TYPE,
+    TOKEN_FLOAT_TYPE,
+    TOKEN_STRING_TYPE,
+    TOKEN_PATH_TYPE,
+    TOKEN_NULL_TYPE,
+    // Composed Types
+    TOKEN_ATTRSET_TYPE_START,
+    TOKEN_ATTRSET_TYPE_END,
+
+    TOKEN_LIST_TYPE_START,
+    TOKEN_LIST_TYPE_END,
+
+    TOKEN_LAMBDA_TYPE,
+    // Predefined / reserved types
+    TOKEN_NUMBER_TYPE,
+    TOKEN_ANY_TYPE,
+    TOKEN_DERIVATION_TYPE,
+    TOKEN_STOREPATH_TYPE,
+    TOKEN_PACKAGE_TYPE,
+
+    // TYPE Operators
+    TOKEN_PIPE,
+
     // Internals
-    TOKEN_COMMENT,
-    TOKEN_ERROR,
-    TOKEN_WHITESPACE,
+    TOKEN_COMMENT, /* */
+    //
+    TOKEN_ERROR,      // Error
+    TOKEN_WHITESPACE, // " "
 
     // Keywords
-    TOKEN_ASSERT,
-    TOKEN_ELSE,
-    TOKEN_IF,
-    TOKEN_IN,
-    TOKEN_INHERIT,
-    TOKEN_LET,
-    TOKEN_OR,
-    TOKEN_REC,
-    TOKEN_THEN,
-    TOKEN_WITH,
+    TOKEN_ASSERT,  // "assert"
+    TOKEN_ELSE,    // "else"
+    TOKEN_IF,      // "if"
+    TOKEN_IN,      // "in"
+    TOKEN_INHERIT, // "inherit"
+    TOKEN_LET,     // "let"
+    TOKEN_OR,      // "or"
+    TOKEN_REC,     // "rec"
+    TOKEN_THEN,    // "then"
+    TOKEN_WITH,    // "with"
 
     // Symbols
-    TOKEN_L_BRACE,
-    TOKEN_R_BRACE,
-    TOKEN_L_BRACK,
-    TOKEN_R_BRACK,
-    TOKEN_ASSIGN,
-    TOKEN_AT,
-    TOKEN_COLON,
-    TOKEN_COMMA,
-    TOKEN_DOT,
-    TOKEN_ELLIPSIS,
-    TOKEN_QUESTION,
-    TOKEN_SEMICOLON,
+    TOKEN_L_BRACE,      // "{"
+    TOKEN_R_BRACE,      // "}"
+    TOKEN_L_BRACK,      // "["
+    TOKEN_R_BRACK,      // "]"
+    TOKEN_ASSIGN,       // "="
+    TOKEN_AT,           // "@"
+    TOKEN_COLON,        // ":"
+    TOKEN_DOUBLE_COLON, // "a :: Int"
+    TOKEN_COMMA,        // ","
+    TOKEN_DOT,          // "."
+    TOKEN_ELLIPSIS,     // "..."
+    TOKEN_QUESTION,     // "?"
+    TOKEN_SEMICOLON,    // ";"
 
     // Operators
-    TOKEN_L_PAREN,
-    TOKEN_R_PAREN,
-    TOKEN_CONCAT,
-    TOKEN_INVERT,
-    TOKEN_UPDATE,
+    TOKEN_L_PAREN, // "("
+    TOKEN_R_PAREN, // ")"
+    TOKEN_CONCAT,  // "[] ++ []"
+    TOKEN_INVERT,  // "!"
+    TOKEN_UPDATE,  // "//"
 
-    TOKEN_ADD,
-    TOKEN_SUB,
-    TOKEN_MUL,
-    TOKEN_DIV,
+    TOKEN_ADD, // "+"
+    TOKEN_SUB, // "-"
+    TOKEN_MUL, // "*"
+    TOKEN_DIV, // "/"
 
-    TOKEN_AND_AND,
-    TOKEN_EQUAL,
-    TOKEN_IMPLICATION,
-    TOKEN_LESS,
-    TOKEN_LESS_OR_EQ,
-    TOKEN_MORE,
-    TOKEN_MORE_OR_EQ,
-    TOKEN_NOT_EQUAL,
-    TOKEN_OR_OR,
+    TOKEN_AND_AND,     // "&&"
+    TOKEN_EQUAL,       // "=="
+    TOKEN_IMPLICATION, // "->"
+    TOKEN_LESS,        // "<"
+    TOKEN_LESS_OR_EQ,  // "<="
+    TOKEN_MORE,        // ">"
+    TOKEN_MORE_OR_EQ,  // ">="
+    TOKEN_NOT_EQUAL,   // "!="
+    TOKEN_OR_OR,       // "||"
 
     // Identifiers and values
-    TOKEN_FLOAT,
-    TOKEN_IDENT,
-    TOKEN_INTEGER,
-    TOKEN_INTERPOL_END,
-    TOKEN_INTERPOL_START,
-    TOKEN_PATH,
-    TOKEN_URI,
-    TOKEN_STRING_CONTENT,
-    TOKEN_STRING_END,
-    TOKEN_STRING_START,
+    TOKEN_FLOAT,          // "1.1" -> "FLOAT(1.1)"
+    TOKEN_IDENT, // "foo" -> "Ident(Foo)" -> 'a'..='z' | 'A'..='Z' | '_' but not one of reserved keywords: ["let" "in" "inherit" "assert" ...]
+    TOKEN_INTEGER, // "1" -> "Int(1)"
+    TOKEN_INTERPOL_END, // "}" -> if Context::Interpol -> destroy Context::Interpol
+    TOKEN_INTERPOL_START, //  "${" -> create Context::Interpol
+    TOKEN_PATH,  // "<Path>" -> "<...validPath....>"  only if kind is IdentType::Store
+    TOKEN_URI,   // 'a'..='z' | 'A'..='Z' | '_'
+    TOKEN_STRING_CONTENT, //  '' -> create [a-Z]... -> create
+    TOKEN_STRING_END, //  " or ''
+    TOKEN_STRING_START, // " or '' -> create Context::StringBody
 
+    // Parser ?
+    NODE_TYPE,
+    NODE_DECLARE,
+    NODE_ASSIGN,
+    NODE_TYPE_UNION,
+    //
     NODE_APPLY,
     NODE_ASSERT,
     NODE_ATTRPATH,
@@ -103,6 +137,7 @@ pub enum SyntaxKind {
     #[doc(hidden)]
     __LAST,
 }
+
 use SyntaxKind::*;
 
 impl SyntaxKind {
