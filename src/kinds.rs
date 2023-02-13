@@ -4,6 +4,10 @@
 pub enum SyntaxKind {
     // Internals
     TOKEN_COMMENT,
+    TOKEN_MULTILINE_COMMENT_START,
+    TOKEN_MULTILINE_COMMENT_CONTENT,
+    TOKEN_MULTILINE_COMMENT_END,
+
     TOKEN_ERROR,
     TOKEN_WHITESPACE,
 
@@ -19,6 +23,18 @@ pub enum SyntaxKind {
     TOKEN_THEN,
     TOKEN_WITH,
 
+    // Comment Blocks
+    TOKEN_TYPE_COMMENT,
+    TOKEN_EXAMPLE_COMMENT,
+    TOKEN_EXAMPLE_COMMENT_CONTENT,
+
+    // Reserved type keywords within type comment blocks
+    TOKEN_BOOL_TYPE,
+    TOKEN_INT_TYPE,
+    TOKEN_FLOAT_TYPE,
+    TOKEN_STRING_TYPE,
+    TOKEN_PATH_TYPE,
+
     // Symbols
     TOKEN_L_BRACE,
     TOKEN_R_BRACE,
@@ -27,6 +43,7 @@ pub enum SyntaxKind {
     TOKEN_ASSIGN,
     TOKEN_AT,
     TOKEN_COLON,
+    TOKEN_DOUBLE_COLON,
     TOKEN_COMMA,
     TOKEN_DOT,
     TOKEN_ELLIPSIS,
