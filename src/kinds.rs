@@ -28,12 +28,21 @@ pub enum SyntaxKind {
     TOKEN_EXAMPLE_COMMENT,
     TOKEN_EXAMPLE_COMMENT_CONTENT,
 
+    NODE_MULTILINE_COMMENT,
+    NODE_EXAMPLE,
+    // container node for the type comment
+    NODE_TYPE_BLOCK,
+    // needed for actual type composition
+    NODE_TYPE,
+
     // Reserved type keywords within type comment blocks
-    TOKEN_BOOL_TYPE,
-    TOKEN_INT_TYPE,
-    TOKEN_FLOAT_TYPE,
-    TOKEN_STRING_TYPE,
-    TOKEN_PATH_TYPE,
+    TOKEN_PIPE, // '|' operator for type unions
+    TOKEN_TYPE,
+    // TOKEN_BOOL_TYPE,
+    // TOKEN_INT_TYPE,
+    // TOKEN_FLOAT_TYPE,
+    // TOKEN_STRING_TYPE,
+    // TOKEN_PATH_TYPE,
 
     // Symbols
     TOKEN_L_BRACE,

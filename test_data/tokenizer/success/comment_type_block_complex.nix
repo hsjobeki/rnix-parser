@@ -8,7 +8,7 @@ let
         drvAttrs :: {
             builder = String; 
             name = String;
-            outputs = [ output :: String ]; 
+            outputs = [ output @ String ]; 
             system = String;
             ${additionalArgs} :: String;
         }

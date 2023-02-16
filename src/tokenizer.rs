@@ -480,9 +480,13 @@ impl Tokenizer<'_> {
                 self.next().unwrap();
                 TOKEN_AND_AND
             }
-            '|' if self.peek() == Some('|') => {
-                self.next().unwrap();
-                TOKEN_OR_OR
+            '|' => {
+                if self.peek() == Some('|') {
+                    self.next().unwrap();
+                    TOKEN_OR_OR
+                } else {
+                    TOKEN_PIPE
+                }
             }
             '<' if self.peek() == Some('=') => {
                 self.next().unwrap();
@@ -523,28 +527,25 @@ impl Tokenizer<'_> {
                         "rec" => TOKEN_REC,
                         "then" => TOKEN_THEN,
                         "with" => TOKEN_WITH,
-                        seq @ ("Bool" | "Int" | "Float" | "String" | "Path") => {
+                        token => {
                             match self.ctx.last() {
-                                Some(Context::TypeBlock) => match seq {
+                                Some(Context::TypeBlock) => match token {
                                     // Primitive types
-                                    "Bool" => TOKEN_BOOL_TYPE,
-                                    "Int" => TOKEN_INT_TYPE,
-                                    "Float" => TOKEN_FLOAT_TYPE,
-                                    "String" => TOKEN_STRING_TYPE,
-                                    "Path" => TOKEN_PATH_TYPE,
-                                    "Null" => TOKEN_PATH_TYPE,
+                                    "Bool" | "Int" | "Float" | "String" | "Path" | "Null" => {
+                                        TOKEN_TYPE
+                                    }
+
                                     //Reserved Types
-                                    "Number" => TOKEN_PATH_TYPE,
-                                    "Any" => TOKEN_PATH_TYPE,
-                                    "StorePath" => TOKEN_PATH_TYPE,
-                                    "Derivation" => TOKEN_PATH_TYPE,
-                                    "Package" => TOKEN_PATH_TYPE,
+                                    // "Number" => TOKEN_PATH_TYPE,
+                                    // "Any" => TOKEN_PATH_TYPE,
+                                    // "StorePath" => TOKEN_PATH_TYPE,
+                                    // "Derivation" => TOKEN_PATH_TYPE,
+                                    // "Package" => TOKEN_PATH_TYPE,
                                     _ => TOKEN_IDENT,
                                 },
                                 _ => TOKEN_IDENT,
                             }
                         }
-                        _ => TOKEN_IDENT,
                     },
                     IdentType::Uri => TOKEN_URI,
                     IdentType::Path => panic!("paths are checked earlier"),

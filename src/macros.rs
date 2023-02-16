@@ -1,6 +1,11 @@
 #[macro_export]
 #[rustfmt::skip]
 macro_rules! T {
+    ("/*")      => ($crate::SyntaxKind::TOKEN_MULTILINE_COMMENT_START);
+    ("*/")      => ($crate::SyntaxKind::TOKEN_MULTILINE_COMMENT_END);
+    (::)       => ($crate::SyntaxKind::TOKEN_DOUBLE_COLON);
+    (|)       => ($crate::SyntaxKind::TOKEN_PIPE);
+
     (assert)  => ($crate::SyntaxKind::TOKEN_ASSERT);
     (else)    => ($crate::SyntaxKind::TOKEN_ELSE);
     (if)      => ($crate::SyntaxKind::TOKEN_IF);
@@ -11,7 +16,6 @@ macro_rules! T {
     (rec)     => ($crate::SyntaxKind::TOKEN_REC);
     (then)    => ($crate::SyntaxKind::TOKEN_THEN);
     (with)    => ($crate::SyntaxKind::TOKEN_WITH);
-
     ('{')     => ($crate::SyntaxKind::TOKEN_L_BRACE);
     ('}')     => ($crate::SyntaxKind::TOKEN_R_BRACE);
     ('[')     => ($crate::SyntaxKind::TOKEN_L_BRACK);

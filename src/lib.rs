@@ -7,6 +7,7 @@ pub mod parser;
 mod tests;
 mod token_set;
 pub mod tokenizer;
+pub mod type_parser;
 
 use std::marker::PhantomData;
 

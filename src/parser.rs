@@ -6,7 +6,7 @@ use rowan::{Checkpoint, GreenNode, GreenNodeBuilder, Language, TextRange, TextSi
 
 use crate::{
     tokenizer::Token,
-    NixLanguage,
+    type_parser, NixLanguage,
     SyntaxKind::{self, *},
     TokenSet,
 };
@@ -93,12 +93,18 @@ struct Parser<'a, I>
 where
     I: Iterator<Item = Token<'a>>,
 {
+    // GreenNodeBuilder from 'rowan' crate
     builder: GreenNodeBuilder<'static>,
+    // List of ParseErrors
     errors: Vec<ParseError>,
 
+    //List of Tokens (trivia)
     trivia_buffer: Vec<Token<'a>>,
+    // TwoSided Queue for Tokens
     buffer: VecDeque<Token<'a>>,
+    // An Iterator over Tokens
     iter: I,
+    // Tracks the amount of consumed Tokens
     consumed: TextSize,
 
     // Recursion depth, used for avoiding stack overflows. This may be incremented
@@ -399,7 +405,6 @@ where
         }
         self.bump(); // the final close, like '}'
     }
-
     fn parse_simple(&mut self) -> Checkpoint {
         let peek = match self.peek() {
             Some(it) => it,
@@ -693,6 +698,73 @@ where
         // Always point this to the lowest-level math function there is
         self.parse_implication()
     }
+
+    fn parse_multiline_comment(&mut self) -> Checkpoint {
+        let checkpoint = self.checkpoint();
+        loop {
+            match self.peek() {
+                Some(TOKEN_MULTILINE_COMMENT_CONTENT) => {
+                    self.bump();
+                    println!("MARKDOWN_CONTENT, do not parse here");
+                }
+                Some(TOKEN_EXAMPLE_COMMENT) => {
+                    let checkpoint = self.checkpoint();
+                    self.start_node_at(checkpoint, NODE_EXAMPLE);
+                    self.bump();
+                    self.expect_peek_any(&[TOKEN_EXAMPLE_COMMENT_CONTENT]);
+                    self.bump();
+                    self.finish_node();
+                }
+                Some(TOKEN_MULTILINE_COMMENT_END) => {
+                    self.bump();
+                    println!("TOKEN_MULTILINE_COMMENT_END");
+                    break;
+                }
+                Some(TOKEN_TYPE_COMMENT) => {
+                    let checkpoint = self.checkpoint();
+                    self.start_node_at(checkpoint, NODE_TYPE_BLOCK);
+                    self.bump();
+                    println!("TOKEN_TYPE_COMMENT");
+                    {
+                        let mut type_tokens: Vec<Token> = Vec::new();
+                        loop {
+                            match self.try_next() {
+                                Some((TOKEN_EXAMPLE_COMMENT, _)) => {
+                                    self.bump();
+                                    break;
+                                }
+                                Some((TOKEN_MULTILINE_COMMENT_END, _)) => {
+                                    self.bump();
+                                    break;
+                                }
+                                Some(kind) => {
+                                    type_tokens.push(kind);
+                                    self.bump();
+                                }
+
+                                None => {
+                                    self.errors.push(ParseError::UnexpectedEOFWanted(
+                                        [T!["*/"]].to_vec().into_boxed_slice(),
+                                    ));
+                                    break;
+                                }
+                            }
+                        }
+                        println!("type tokens: {type_tokens:?}");
+                        type_parser::parse(type_tokens.into_iter(), &mut self.builder);
+                    }
+                    // self.parse_type();
+                    self.finish_node();
+                }
+
+                t @ _ => {
+                    println!("unhandled token: {t:?}");
+                    break;
+                }
+            };
+        }
+        checkpoint
+    }
     /// Parse Nix code into an AST
     pub fn parse_expr(&mut self) -> Checkpoint {
         // Limit chosen somewhat arbitrarily
@@ -757,6 +829,19 @@ where
                 self.parse_expr();
                 self.finish_node();
                 checkpoint
+            }
+            Some(T!["/*"]) => {
+                let checkpoint = self.checkpoint();
+                // eat the /* token
+                self.start_node_at(checkpoint, NODE_MULTILINE_COMMENT);
+                self.bump();
+                self.parse_multiline_comment();
+                self.finish_node();
+                if self.peek().is_some() {
+                    self.parse_expr()
+                } else {
+                    checkpoint
+                }
             }
             _ => self.parse_math(),
         };
