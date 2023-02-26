@@ -39,6 +39,26 @@ Example: 2
   # heading 1
 
 */
+
+
+/*  freeText
+    \nType:
+    {typeSyntaxt}
+    Example:
+    freeText
+*/
+
+/*
+    # lskljhasd
+
+    - list
+
+
+   @TYPE: 
+*/
+
+
+
 {
   foo = a: a / 2;
 }

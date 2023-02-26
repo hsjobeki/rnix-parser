@@ -1,6 +1,6 @@
 /*
  Description
- Type: Int;
+ Type: Int
  Example: a = 1;
 */
 1

@@ -30,6 +30,7 @@ pub enum SyntaxKind {
 
     NODE_MULTILINE_COMMENT,
     NODE_EXAMPLE,
+    NODE_DECLARE,
     // container node for the type comment
     NODE_TYPE_BLOCK,
     // needed for actual type composition

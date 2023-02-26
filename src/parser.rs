@@ -197,6 +197,20 @@ where
         while self.peek_raw().map(|&(t, _)| t.is_trivia()).unwrap_or(false) {
             self.bump();
         }
+        // match self.peek_raw() {
+        //     Some((TOKEN_MULTILINE_COMMENT_START, _)) => {
+        //         while self
+        //             .peek_raw()
+        //             .map(|&(t, _)| t != TOKEN_MULTILINE_COMMENT_END)
+        //             .unwrap_or(false)
+        //         {
+        //             self.bump();
+        //         }
+        //         self.bump();
+        //         self.peek_raw()
+        //     }
+        //     _ => self.peek_raw(),
+        // }
         self.peek_raw()
     }
     fn peek(&mut self) -> Option<SyntaxKind> {
@@ -362,6 +376,14 @@ where
         loop {
             match self.peek() {
                 None => break,
+                Some(T!["/*"]) => {
+                    let checkpoint = self.checkpoint();
+                    // eat the /* token
+                    self.start_node_at(checkpoint, NODE_MULTILINE_COMMENT);
+                    self.bump();
+                    self.parse_multiline_comment();
+                    self.finish_node();
+                }
                 token if token == Some(until) => break,
                 Some(T![inherit]) => {
                     self.start_node(NODE_INHERIT);
@@ -420,6 +442,14 @@ where
         };
         let checkpoint = self.checkpoint();
         match peek {
+            T!["/*"] => {
+                let checkpoint = self.checkpoint();
+                // eat the /* token
+                self.start_node_at(checkpoint, NODE_MULTILINE_COMMENT);
+                self.bump();
+                self.parse_multiline_comment();
+                self.finish_node();
+            }
             T!['('] => {
                 self.start_node(NODE_PAREN);
                 self.bump();
@@ -728,18 +758,19 @@ where
                     {
                         let mut type_tokens: Vec<Token> = Vec::new();
                         loop {
-                            match self.try_next() {
+                            match self.peek_raw() {
                                 Some((TOKEN_EXAMPLE_COMMENT, _)) => {
-                                    self.bump();
+                                    // self.bump();
+                                    println!("peek TOKEN_EXAMPLE_COMMENT ");
                                     break;
                                 }
                                 Some((TOKEN_MULTILINE_COMMENT_END, _)) => {
-                                    self.bump();
+                                    // self.bump();
                                     break;
                                 }
                                 Some(kind) => {
-                                    type_tokens.push(kind);
-                                    self.bump();
+                                    type_tokens.push(*kind);
+                                    self.try_next();
                                 }
 
                                 None => {
@@ -753,7 +784,6 @@ where
                         println!("type tokens: {type_tokens:?}");
                         type_parser::parse(type_tokens.into_iter(), &mut self.builder);
                     }
-                    // self.parse_type();
                     self.finish_node();
                 }
 

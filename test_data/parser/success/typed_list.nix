@@ -1,0 +1,5 @@
+/*
+Type:
+[ String | Bool ]
+*/
+[ "foo" ]
