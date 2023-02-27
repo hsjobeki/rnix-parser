@@ -286,9 +286,12 @@ where
             _ => {
                 if self.expect_peek_any(&[TOKEN_IDENT, TOKEN_OR]).is_some() {
                     self.start_node(NODE_IDENT);
-                    let (_, s) = self.try_next().unwrap();
+                    let (t, s) = self.try_next().unwrap();
+                    println!("parse_attr: {t:?} {s:?}");
                     self.manual_bump(s, TOKEN_IDENT);
                     self.finish_node()
+                } else {
+                    panic!("unhandled token in parse_attr");
                 }
             }
         }
@@ -296,15 +299,16 @@ where
 
     fn parse_attrpath(&mut self) {
         self.start_node(NODE_ATTRPATH);
-        self.parse_attr();
-        // loop {
-
-        // if self.peek() == Some(T![.]) {
-        //    self.bump();
-        //     } else {
-        //         break;
-        //     }
-        // }
+        loop {
+            self.parse_attr();
+            let p = self.peek();
+            println!("next token in attrpath: {p:?}");
+            if self.peek() == Some(T![.]) {
+                self.bump();
+            } else {
+                break;
+            }
+        }
         self.finish_node();
     }
 
@@ -317,8 +321,18 @@ where
                     self.start_node(NODE_ATTRPATH_VALUE);
                     self.parse_attrpath();
                     self.expect(T![::]);
+                    let checkpoint = self.checkpoint();
                     self.parse_expr();
-                    self.expect(T![;]);
+                    match self.peek() {
+                        Some(T![;]) => self.bump(),
+                        Some(T![?]) => {
+                            self.start_node_at(checkpoint, NODE_UNARY_OP);
+                            self.bump();
+                            self.expect(T![;]);
+                            self.finish_node();
+                        }
+                        _ => (),
+                    }
                     self.finish_node();
                 }
             }
@@ -359,11 +373,13 @@ where
                 self.finish_node();
             }
             T!['{'] => {
-                panic!("yet unhandled trivial L_BRACE ");
-                // self.start_node(NODE_ATTR_SET);
-                // self.bump();
+                // panic!("yet unhandled trivial L_BRACE ");
+                self.start_node(NODE_ATTR_SET);
+                self.bump();
+                self.parse_set(T!['}']);
 
-                // self.parse_expr();
+                self.finish_node();
+
                 // self.bump();
                 // self.finish_node();
             }
@@ -453,6 +469,7 @@ where
                     _ => (),
                 }
             }
+
             kind => {
                 println!("unhandled trivial token {kind:?}");
                 let start = self.start_error_node();

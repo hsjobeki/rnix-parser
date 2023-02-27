@@ -30,35 +30,7 @@ in
         system :: String;
         ${additionalArgs} :: String;
     } -> Derivation
-    
-Example: 2
-
-  - some
-  - markdown
-
-  # heading 1
-
-*/
-
-
-/*  freeText
-    \nType:
-    {typeSyntaxt}
-    Example:
-    freeText
-*/
-
-/*
-    # lskljhasd
-
-    - list
-
-
-   @TYPE: 
-*/
-
-
-
+*/  
 {
-  foo = a: a / 2;
+  foo = "bar";
 }
