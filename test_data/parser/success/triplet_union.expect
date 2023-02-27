@@ -1,0 +1,53 @@
+NODE_ROOT@0..71
+  NODE_MULTILINE_COMMENT@0..60
+    TOKEN_MULTILINE_COMMENT_START@0..2 "/*"
+    TOKEN_MULTILINE_COMMENT_CONTENT@2..3 "\n"
+    NODE_TYPE_BLOCK@3..58
+      TOKEN_TYPE_COMMENT@3..8 "Type:"
+      TOKEN_WHITESPACE@8..9 "\n"
+      NODE_BIN_OP@9..57
+        NODE_IDENT@9..10
+          TOKEN_IDENT@9..10 "a"
+        TOKEN_WHITESPACE@10..11 " "
+        TOKEN_PIPE@11..12 "|"
+        TOKEN_WHITESPACE@12..13 " "
+        NODE_BIN_OP@13..57
+          NODE_TYPE@13..19
+            TOKEN_TYPE@13..19 "String"
+          TOKEN_WHITESPACE@19..20 " "
+          TOKEN_PIPE@20..21 "|"
+          TOKEN_WHITESPACE@21..22 " "
+          NODE_BIN_OP@22..57
+            NODE_STRING@22..27
+              TOKEN_STRING_START@22..23 "\""
+              TOKEN_STRING_CONTENT@23..26 "foo"
+              TOKEN_STRING_END@26..27 "\""
+            TOKEN_WHITESPACE@27..28 " "
+            TOKEN_PIPE@28..29 "|"
+            TOKEN_WHITESPACE@29..30 " "
+            NODE_BIN_OP@30..57
+              NODE_LITERAL@30..31
+                TOKEN_INTEGER@30..31 "1"
+              TOKEN_WHITESPACE@31..32 " "
+              TOKEN_PIPE@32..33 "|"
+              TOKEN_WHITESPACE@33..34 " "
+              NODE_BIN_OP@34..57
+                NODE_LITERAL@34..37
+                  TOKEN_FLOAT@34..37 "1.0"
+                TOKEN_WHITESPACE@37..38 " "
+                TOKEN_PIPE@38..39 "|"
+                TOKEN_WHITESPACE@39..40 " "
+                NODE_BIN_OP@40..57
+                  NODE_LITERAL@40..44
+                    TOKEN_PATH@40..44 "/foo"
+                  TOKEN_WHITESPACE@44..45 " "
+                  TOKEN_PIPE@45..46 "|"
+                  TOKEN_WHITESPACE@46..47 " "
+                  NODE_ERROR@47..57
+                    TOKEN_URI@47..57 "github:nix"
+      TOKEN_WHITESPACE@57..58 "\n"
+    TOKEN_MULTILINE_COMMENT_END@58..60 "*/"
+  TOKEN_WHITESPACE@60..61 "\n"
+  NODE_LITERAL@61..71
+    TOKEN_URI@61..71 "github:nix"
+
