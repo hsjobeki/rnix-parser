@@ -782,7 +782,9 @@ where
                             }
                         }
                         println!("type tokens: {type_tokens:?}");
-                        type_parser::parse(type_tokens.into_iter(), &mut self.builder);
+                        let (_, mut errors) =
+                            type_parser::parse(type_tokens.into_iter(), &mut self.builder);
+                        self.errors.append(&mut errors);
                     }
                     self.finish_node();
                 }

@@ -1,0 +1,36 @@
+NODE_ROOT@0..58
+  NODE_MULTILINE_COMMENT@0..54
+    TOKEN_MULTILINE_COMMENT_START@0..2 "/*"
+    TOKEN_MULTILINE_COMMENT_CONTENT@2..3 "\n"
+    NODE_TYPE_BLOCK@3..52
+      TOKEN_TYPE_COMMENT@3..8 "Type:"
+      TOKEN_WHITESPACE@8..11 "\n  "
+      NODE_LIST@11..51
+        TOKEN_L_BRACK@11..12 "["
+        TOKEN_WHITESPACE@12..18 " \n    "
+        NODE_ATTR_SET@18..46
+          TOKEN_L_BRACE@18..19 "{"
+          TOKEN_WHITESPACE@19..26 "\n      "
+          NODE_ATTRPATH_VALUE@26..40
+            NODE_ATTRPATH@26..29
+              NODE_IDENT@26..29
+                TOKEN_IDENT@26..29 "foo"
+            TOKEN_WHITESPACE@29..30 " "
+            TOKEN_DOUBLE_COLON@30..32 "::"
+            TOKEN_WHITESPACE@32..33 " "
+            NODE_TYPE@33..39
+              TOKEN_TYPE@33..39 "String"
+            TOKEN_SEMICOLON@39..40 ";"
+          TOKEN_WHITESPACE@40..45 "\n    "
+          TOKEN_R_BRACE@45..46 "}"
+        TOKEN_WHITESPACE@46..50 " \n  "
+        TOKEN_R_BRACK@50..51 "]"
+      TOKEN_WHITESPACE@51..52 "\n"
+    TOKEN_MULTILINE_COMMENT_END@52..54 "*/"
+  TOKEN_WHITESPACE@54..55 "\n"
+  NODE_LIST@55..58
+    TOKEN_L_BRACK@55..56 "["
+    NODE_LITERAL@56..57
+      TOKEN_INTEGER@56..57 "1"
+    TOKEN_R_BRACK@57..58 "]"
+

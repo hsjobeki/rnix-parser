@@ -283,15 +283,13 @@ where
         match self.peek() {
             Some(TOKEN_INTERPOL_START) => self.parse_dynamic(),
             Some(TOKEN_STRING_START) => self.parse_string(),
-            _ => {
+            t => {
                 if self.expect_peek_any(&[TOKEN_IDENT, TOKEN_OR]).is_some() {
                     self.start_node(NODE_IDENT);
                     let (t, s) = self.try_next().unwrap();
                     println!("parse_attr: {t:?} {s:?}");
                     self.manual_bump(s, TOKEN_IDENT);
-                    self.finish_node()
-                } else {
-                    panic!("unhandled token in parse_attr");
+                    self.finish_node();
                 }
             }
         }
@@ -317,7 +315,7 @@ where
             match self.peek() {
                 None => break,
                 token if token == Some(until) => break,
-                Some(_) => {
+                _ => {
                     self.start_node(NODE_ATTRPATH_VALUE);
                     self.parse_attrpath();
                     self.expect(T![::]);
@@ -331,7 +329,25 @@ where
                             self.expect(T![;]);
                             self.finish_node();
                         }
-                        _ => (),
+                        // handeled in parse trivial
+                        // Some(T!['}']) => (),
+                        Some(kind) => {
+                            println!(
+                                "unexpected token_kind: {kind:?}, expected ? <Optional> or ; <Semicolon>"
+                            );
+
+                            let start = self.start_error_node();
+                            self.bump();
+                            let end = self.finish_error_node();
+                            self.errors.push(ParseError::UnexpectedWanted(
+                                kind,
+                                TextRange::new(start, end),
+                                [T![;], T![?]].to_vec().into_boxed_slice(),
+                            ))
+                        }
+                        None => self.errors.push(ParseError::UnexpectedEOFWanted(
+                            [T![;], T![?]].to_vec().into_boxed_slice(),
+                        )),
                     }
                     self.finish_node();
                 }
@@ -503,21 +519,41 @@ where
 
                 checkpoint
             }
+            // possible legacy root ident
+            // if the next token is a double colon
+            // else continue to parse the expression
             Some(TOKEN_IDENT) if self.depth == 1 => {
-                // legacy root ident
+                //Get the next non_trivial token
+                let next = loop {
+                    let token = self.iter.next();
+                    let kind = token.as_ref().map(|&(t, _)| t);
+                    if let Some(token) = token {
+                        self.buffer.push_back(token);
+                    }
+                    if kind.map(|t| !t.is_trivia()).unwrap_or(true) {
+                        break kind;
+                    }
+                };
+
                 let checkpoint = self.checkpoint();
-                self.bump();
-                match self.peek() {
+                match next {
                     Some(T![::]) => {
                         self.start_node_at(checkpoint, NODE_IDENT);
+                        // bump TOKEN_IDENT
                         self.bump();
+
+                        // bump TOKEN_DOUBLE_COLON
+                        // eat from buffer
+                        self.bump();
+                        // eat from iterator
+                        self.bump();
+
+                        // parse the expression after ::
                         self.parse_expr();
                         self.finish_node();
                     }
                     _ => {
-                        self.start_error_node();
-                        self.bump();
-                        self.finish_error_node();
+                        self.parse_expr();
                     }
                 }
                 checkpoint

@@ -1,0 +1,33 @@
+NODE_ROOT@0..45
+  NODE_MULTILINE_COMMENT@0..43
+    TOKEN_MULTILINE_COMMENT_START@0..2 "/*"
+    TOKEN_MULTILINE_COMMENT_CONTENT@2..5 "\n  "
+    NODE_TYPE_BLOCK@5..41
+      TOKEN_TYPE_COMMENT@5..10 "Type:"
+      TOKEN_WHITESPACE@10..14 " \n  "
+      NODE_IDENT@14..40
+        TOKEN_IDENT@14..17 "foo"
+        TOKEN_WHITESPACE@17..18 " "
+        TOKEN_DOUBLE_COLON@18..20 "::"
+        TOKEN_WHITESPACE@20..21 " "
+        NODE_ATTR_SET@21..40
+          TOKEN_L_BRACE@21..22 "{"
+          TOKEN_WHITESPACE@22..27 "\n    "
+          NODE_ATTRPATH_VALUE@27..36
+            NODE_ATTRPATH@27..30
+              NODE_IDENT@27..30
+                TOKEN_IDENT@27..30 "bar"
+            TOKEN_WHITESPACE@30..31 " "
+            TOKEN_DOUBLE_COLON@31..33 "::"
+            TOKEN_WHITESPACE@33..34 " "
+            NODE_LITERAL@34..35
+              TOKEN_INTEGER@34..35 "1"
+            TOKEN_SEMICOLON@35..36 ";"
+          TOKEN_WHITESPACE@36..39 "\n  "
+          TOKEN_R_BRACE@39..40 "}"
+      TOKEN_WHITESPACE@40..41 "\n"
+    TOKEN_MULTILINE_COMMENT_END@41..43 "*/"
+  TOKEN_WHITESPACE@43..44 "\n"
+  NODE_LITERAL@44..45
+    TOKEN_INTEGER@44..45 "1"
+

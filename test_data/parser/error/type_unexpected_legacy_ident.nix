@@ -1,0 +1,5 @@
+/*
+Type:
+  [ a :: Bool ]
+*/
+[ true ]
