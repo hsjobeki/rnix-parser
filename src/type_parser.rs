@@ -364,26 +364,16 @@ where
             T!['['] => {
                 self.start_node(NODE_LIST);
                 self.bump();
-                // println!("list next: {:?}", self.peek());
-                // while self.peek().map(|t| t != T![']']).unwrap_or(false) {
                 self.parse_trivial();
-                // }
-                // println!("list next: {:?}", self.peek());
                 self.expect(T![']']);
                 self.finish_node();
             }
             T!['{'] => {
-                // panic!("yet unhandled trivial L_BRACE ");
                 self.start_node(NODE_ATTR_SET);
                 self.bump();
                 self.parse_set(T!['}']);
-
                 self.finish_node();
-
-                // self.bump();
-                // self.finish_node();
             }
-            // T![|] => (),
             TOKEN_TYPE => {
                 //wrap the type token into a node_type
                 self.start_node(NODE_TYPE);
@@ -393,7 +383,6 @@ where
                 match self.peek() {
                     Some(T![|]) => {
                         // self.parse_left_assoc(Self::parse_trivial, T![|] | ());
-
                         self.start_node_at(checkpoint, NODE_BIN_OP);
                         self.bump();
                         self.parse_trivial();
@@ -404,6 +393,7 @@ where
             }
             TOKEN_STRING_START => {
                 self.parse_string();
+
                 match self.peek() {
                     Some(T![|]) => {
                         self.start_node_at(checkpoint, NODE_BIN_OP);
@@ -511,6 +501,25 @@ where
                 self.parse_expr();
                 self.finish_node();
 
+                checkpoint
+            }
+            Some(TOKEN_IDENT) if self.depth == 1 => {
+                // legacy root ident
+                let checkpoint = self.checkpoint();
+                self.bump();
+                match self.peek() {
+                    Some(T![::]) => {
+                        self.start_node_at(checkpoint, NODE_IDENT);
+                        self.bump();
+                        self.parse_expr();
+                        self.finish_node();
+                    }
+                    _ => {
+                        self.start_error_node();
+                        self.bump();
+                        self.finish_error_node();
+                    }
+                }
                 checkpoint
             }
             // Some()
